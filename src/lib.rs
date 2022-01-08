@@ -1,6 +1,7 @@
 use nom::{
-    character::complete::alphanumeric1,
-    combinator::{all_consuming, eof, map},
+    branch::alt,
+    character::complete::{alphanumeric1, char},
+    combinator::{all_consuming, eof, map, value},
     multi::many1,
     sequence::terminated,
 };
@@ -22,8 +23,16 @@ impl Token {
     }
 }
 
-fn token(input: &str) -> NResult<Token> {
+fn token_word(input: &str) -> NResult<Token> {
     map(alphanumeric1, Token::word)(input)
+}
+
+fn token_slash(input: &str) -> NResult<Token> {
+    value(Token::Slash, char('/'))(input)
+}
+
+fn token(input: &str) -> NResult<Token> {
+    alt((token_word, token_slash))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
@@ -38,7 +47,18 @@ mod tests {
     fn single_word() {
         assert_eq!(
             lexer("singleword"),
-            Ok(("", vec![Token::Word("singleword".to_string())]))
+            Ok(("", vec![Token::word("singleword")]))
         );
+    }
+
+    #[test]
+    fn two_words_and_slash() {
+        assert_eq!(
+            lexer("two/words"),
+            Ok((
+                "",
+                vec![Token::word("two"), Token::Slash, Token::word("words")]
+            ))
+        )
     }
 }
