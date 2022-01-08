@@ -23,24 +23,13 @@ impl Token {
     }
 }
 
-fn token_word(input: &str) -> NResult<Token> {
-    map(alphanumeric1, Token::word)(input)
-}
-
-fn token_slash(input: &str) -> NResult<Token> {
-    value(Token::Slash, char('/'))(input)
-}
-
-fn token_newline(input: &str) -> NResult<Token> {
-    value(Token::Newline, newline)(input)
-}
-
-fn token_tab(input: &str) -> NResult<Token> {
-    value(Token::Tab, char('\t'))(input)
-}
-
 fn token(input: &str) -> NResult<Token> {
-    alt((token_word, token_slash, token_newline, token_tab))(input)
+    let word = map(alphanumeric1, Token::word);
+    let slash = value(Token::Slash, char('/'));
+    let newline = value(Token::Newline, newline);
+    let tab = value(Token::Tab, char('\t'));
+
+    alt((word, slash, newline, tab))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
