@@ -4,21 +4,23 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, newline, satisfy, one_of},
+    character::complete::{char, newline, one_of, satisfy},
     combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
     multi::{many0, many1, many_m_n},
+    number::complete::double,
     sequence::{delimited, terminated, tuple},
 };
 
 /// Standard return type for [`nom`] string parsers.
 type NResult<'a, T> = nom::IResult<&'a str, T>;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Token {
     BracketRoundClosing,
     BracketRoundOpening,
     Identifier(String),
     LineComment(String),
+    Number(f64),
     Operator(String),
     Slash,
     Whitespace(String),
@@ -67,6 +69,7 @@ fn token(input: &str) -> NResult<Token> {
     alt((
         map(line_comment, Token::line_comment),
         map(identifier, Token::ident),
+        map(double, Token::Number),
         map(operator, Token::operator),
         map(whitespace, Token::whitespace),
         value(Token::BracketRoundClosing, char(')')),
@@ -146,8 +149,11 @@ mod tests {
     }
 
     #[test]
-    fn disallow_identifier_starting_with_digit() {
-        assert!(matches!(lexer("0word"), Err(_)));
+    fn identifier_after_number() {
+        assert_eq!(
+            lexer("0word").unwrap().1,
+            vec![Token::Number(0.0), Token::ident("word")]
+        );
     }
 
     #[test]
