@@ -19,7 +19,6 @@ pub enum Token {
     BracketRoundOpening,
     Identifier(String),
     LineComment(String),
-    Newline,
     Operator(String),
     Slash,
     Whitespace(String),
@@ -62,7 +61,7 @@ fn token(input: &str) -> NResult<Token> {
     let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let operator = recognize(many_m_n(1, 2, alt((char('+'), char('<')))));
-    let whitespace = recognize(many1(alt((char(' '), char('\t')))));
+    let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
     let slash = terminated(char('/'), peek(not(char('/'))));
 
     alt((
@@ -73,7 +72,6 @@ fn token(input: &str) -> NResult<Token> {
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
         value(Token::Slash, slash),
-        value(Token::Newline, newline),
     ))(input)
 }
 
@@ -105,7 +103,7 @@ mod tests {
             lexer("//hello\nword").unwrap().1,
             vec![
                 Token::line_comment("hello"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::ident("word"),
             ]
         );
@@ -117,7 +115,7 @@ mod tests {
             lexer("hello\n//world").unwrap().1,
             vec![
                 Token::ident("hello"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::line_comment("world"),
             ]
         );
@@ -170,7 +168,7 @@ mod tests {
             lexer("two\n    identifiers").unwrap().1,
             vec![
                 Token::ident("two"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::whitespace("    "),
                 Token::ident("identifiers")
             ]
@@ -185,7 +183,7 @@ mod tests {
                 Token::ident("three"),
                 Token::Slash,
                 Token::ident("identifiers"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::ident("w"),
                 Token::Slash,
                 Token::ident("newline"),
@@ -201,7 +199,7 @@ mod tests {
                 Token::ident("four"),
                 Token::Slash,
                 Token::ident("words"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::whitespace("\t"),
                 Token::ident("with"),
                 Token::Slash,
@@ -256,10 +254,10 @@ animal
             lexer(text).unwrap().1,
             vec![
                 Token::ident("animal"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::whitespace("    "),
                 Token::ident("cat"),
-                Token::Newline,
+                Token::whitespace("\n"),
                 Token::whitespace("        "),
                 Token::ident("tiger"),
             ]
