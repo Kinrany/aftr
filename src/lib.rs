@@ -170,4 +170,25 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn whitepaper_1() {
+        let text = "\
+animal
+    cat
+        tiger";
+        assert_eq!(
+            lexer(text).unwrap().1,
+            vec![
+                Token::ident("animal"),
+                Token::Newline,
+                Token::Indentation,
+                Token::ident("cat"),
+                Token::Newline,
+                Token::Indentation,
+                Token::Indentation,
+                Token::ident("tiger"),
+            ]
+        );
+    }
 }
