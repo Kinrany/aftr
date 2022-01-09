@@ -1,9 +1,13 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_errors_doc, clippy::non_ascii_literal)]
+
 use nom::{
     branch::alt,
+    bytes::complete::tag,
     character::complete::{char, newline, satisfy},
-    combinator::{all_consuming, eof, map, recognize, value},
-    multi::many1,
-    sequence::terminated,
+    combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
+    multi::{many0, many1},
+    sequence::{delimited, terminated},
 };
 
 /// Standard return type for [`nom`] string parsers.
@@ -11,15 +15,20 @@ type NResult<'a, T> = nom::IResult<&'a str, T>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
-    Word(String),
-    Slash,
+    LineComment(String),
     Newline,
+    Slash,
     Tab,
+    Word(String),
 }
 
 impl Token {
+    fn line_comment(s: &str) -> Self {
+        Self::LineComment(s.into())
+    }
+
     fn word(s: &str) -> Self {
-        Self::Word(s.to_string())
+        Self::Word(s.into())
     }
 }
 
@@ -28,13 +37,22 @@ fn word_character(input: &str) -> NResult<char> {
     alt((char('_'), satisfy(char::is_alphanumeric)))(input)
 }
 
+/// A single character that is not a newline.
+fn not_newline(input: &str) -> NResult<char> {
+    satisfy(|ch| ch != '\n')(input)
+}
+
 fn token(input: &str) -> NResult<Token> {
+    let line_comment = map(
+        delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline))),
+        Token::line_comment,
+    );
     let word = map(recognize(many1(word_character)), Token::word);
-    let slash = value(Token::Slash, char('/'));
-    let newline = value(Token::Newline, newline);
+    let slash = terminated(value(Token::Slash, char('/')), peek(not(char('/'))));
+    let newline_token = value(Token::Newline, newline);
     let tab = value(Token::Tab, char('\t'));
 
-    alt((word, slash, newline, tab))(input)
+    alt((line_comment, word, slash, newline_token, tab))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
@@ -44,6 +62,30 @@ pub fn lexer(input: &str) -> NResult<Vec<Token>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn line_comment() {
+        assert_eq!(
+            lexer("//hello\nword").unwrap().1,
+            vec![
+                Token::line_comment("hello"),
+                Token::Newline,
+                Token::word("word"),
+            ]
+        );
+    }
+
+    #[test]
+    fn line_comment_on_last_line() {
+        assert_eq!(
+            lexer("hello\n//world").unwrap().1,
+            vec![
+                Token::word("hello"),
+                Token::Newline,
+                Token::line_comment("world"),
+            ]
+        );
+    }
 
     #[test]
     fn single_word() {
@@ -88,7 +130,7 @@ mod tests {
                 Token::Newline,
                 Token::word("w"),
                 Token::Slash,
-                Token::word("newline")
+                Token::word("newline"),
             ]
         );
     }
@@ -105,7 +147,7 @@ mod tests {
                 Token::Tab,
                 Token::word("with"),
                 Token::Slash,
-                Token::word("tab")
+                Token::word("tab"),
             ]
         );
     }
