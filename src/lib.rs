@@ -15,38 +15,16 @@ use nom::{
 type NResult<'a, T> = nom::IResult<&'a str, T>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Token {
+pub enum Token<'a> {
     BracketRoundClosing,
     BracketRoundOpening,
-    Identifier(String),
-    LineComment(String),
+    Identifier(&'a str),
+    LineComment(&'a str),
     Number(f64),
-    Operator(String),
+    Operator(&'a str),
     Slash,
-    String(String),
-    Whitespace(String),
-}
-
-impl Token {
-    fn ident(s: &str) -> Self {
-        Self::Identifier(s.into())
-    }
-
-    fn line_comment(s: &str) -> Self {
-        Self::LineComment(s.into())
-    }
-
-    fn operator(s: &str) -> Self {
-        Self::Operator(s.into())
-    }
-
-    fn string(s: &str) -> Self {
-        Self::String(s.into())
-    }
-
-    fn whitespace(s: &str) -> Self {
-        Self::Whitespace(s.into())
-    }
+    String(&'a str),
+    Whitespace(&'a str),
 }
 
 /// A single Unicode alphabetic character.
@@ -76,12 +54,12 @@ fn token(input: &str) -> NResult<Token> {
     let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
 
     alt((
-        map(line_comment, Token::line_comment),
-        map(identifier, Token::ident),
+        map(line_comment, Token::LineComment),
+        map(identifier, Token::Identifier),
         map(double, Token::Number),
-        map(string, Token::string),
-        map(operator, Token::operator),
-        map(whitespace, Token::whitespace),
+        map(string, Token::String),
+        map(operator, Token::Operator),
+        map(whitespace, Token::Whitespace),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
         value(Token::Slash, char('/')),
@@ -115,9 +93,9 @@ mod tests {
         assert_eq!(
             lexer("//hello\nword").unwrap().1,
             vec![
-                Token::line_comment("hello"),
-                Token::whitespace("\n"),
-                Token::ident("word"),
+                Token::LineComment("hello"),
+                Token::Whitespace("\n"),
+                Token::Identifier("word"),
             ]
         );
     }
@@ -127,9 +105,9 @@ mod tests {
         assert_eq!(
             lexer("hello\n//world").unwrap().1,
             vec![
-                Token::ident("hello"),
-                Token::whitespace("\n"),
-                Token::line_comment("world"),
+                Token::Identifier("hello"),
+                Token::Whitespace("\n"),
+                Token::LineComment("world"),
             ]
         );
     }
@@ -138,7 +116,7 @@ mod tests {
     fn single_identifier() {
         assert_eq!(
             lexer("identifier").unwrap().1,
-            vec![Token::ident("identifier")]
+            vec![Token::Identifier("identifier")]
         );
     }
 
@@ -146,7 +124,7 @@ mod tests {
     fn single_identifier_with_underscore() {
         assert_eq!(
             lexer("single_identifier").unwrap().1,
-            vec![Token::ident("single_identifier")]
+            vec![Token::Identifier("single_identifier")]
         );
     }
 
@@ -154,7 +132,7 @@ mod tests {
     fn single_identifier_with_unicode() {
         assert_eq!(
             lexer("single_wꙮrd").unwrap().1,
-            vec![Token::ident("single_wꙮrd")]
+            vec![Token::Identifier("single_wꙮrd")]
         );
     }
 
@@ -162,7 +140,7 @@ mod tests {
     fn identifier_after_number() {
         assert_eq!(
             lexer("0word").unwrap().1,
-            vec![Token::Number(0.0), Token::ident("word")]
+            vec![Token::Number(0.0), Token::Identifier("word")]
         );
     }
 
@@ -171,9 +149,9 @@ mod tests {
         assert_eq!(
             lexer("two/identifiers").unwrap().1,
             vec![
-                Token::ident("two"),
+                Token::Identifier("two"),
                 Token::Slash,
-                Token::ident("identifiers")
+                Token::Identifier("identifiers")
             ]
         );
     }
@@ -183,10 +161,10 @@ mod tests {
         assert_eq!(
             lexer("two\n    identifiers").unwrap().1,
             vec![
-                Token::ident("two"),
-                Token::whitespace("\n"),
-                Token::whitespace("    "),
-                Token::ident("identifiers")
+                Token::Identifier("two"),
+                Token::Whitespace("\n"),
+                Token::Whitespace("    "),
+                Token::Identifier("identifiers")
             ]
         );
     }
@@ -196,13 +174,13 @@ mod tests {
         assert_eq!(
             lexer("three/identifiers\nw/newline").unwrap().1,
             vec![
-                Token::ident("three"),
+                Token::Identifier("three"),
                 Token::Slash,
-                Token::ident("identifiers"),
-                Token::whitespace("\n"),
-                Token::ident("w"),
+                Token::Identifier("identifiers"),
+                Token::Whitespace("\n"),
+                Token::Identifier("w"),
                 Token::Slash,
-                Token::ident("newline"),
+                Token::Identifier("newline"),
             ]
         );
     }
@@ -212,14 +190,14 @@ mod tests {
         assert_eq!(
             lexer("four/words\n\twith/indentation").unwrap().1,
             vec![
-                Token::ident("four"),
+                Token::Identifier("four"),
                 Token::Slash,
-                Token::ident("words"),
-                Token::whitespace("\n"),
-                Token::whitespace("\t"),
-                Token::ident("with"),
+                Token::Identifier("words"),
+                Token::Whitespace("\n"),
+                Token::Whitespace("\t"),
+                Token::Identifier("with"),
                 Token::Slash,
-                Token::ident("indentation"),
+                Token::Identifier("indentation"),
             ]
         );
     }
@@ -229,9 +207,9 @@ mod tests {
         assert_eq!(
             lexer("one+two").unwrap().1,
             vec![
-                Token::ident("one"),
-                Token::operator("+"),
-                Token::ident("two"),
+                Token::Identifier("one"),
+                Token::Operator("+"),
+                Token::Identifier("two"),
             ]
         );
     }
@@ -241,16 +219,16 @@ mod tests {
         assert_eq!(
             lexer("one<<two").unwrap().1,
             vec![
-                Token::ident("one"),
-                Token::operator("<<"),
-                Token::ident("two"),
+                Token::Identifier("one"),
+                Token::Operator("<<"),
+                Token::Identifier("two"),
             ]
         );
     }
 
     #[test]
     fn string() {
-        assert_eq!(lexer("\"text\"").unwrap().1, vec![Token::string("text")]);
+        assert_eq!(lexer("\"text\"").unwrap().1, vec![Token::String("text")]);
     }
 
     #[test]
@@ -258,9 +236,9 @@ mod tests {
         assert_eq!(
             lexer("one two").unwrap().1,
             vec![
-                Token::ident("one"),
-                Token::whitespace(" "),
-                Token::ident("two"),
+                Token::Identifier("one"),
+                Token::Whitespace(" "),
+                Token::Identifier("two"),
             ]
         );
     }
@@ -275,13 +253,13 @@ animal
         assert_eq!(
             lexer(text).unwrap().1,
             vec![
-                Token::ident("animal"),
-                Token::whitespace("\n"),
-                Token::whitespace("    "),
-                Token::ident("cat"),
-                Token::whitespace("\n"),
-                Token::whitespace("        "),
-                Token::ident("tiger"),
+                Token::Identifier("animal"),
+                Token::Whitespace("\n"),
+                Token::Whitespace("    "),
+                Token::Identifier("cat"),
+                Token::Whitespace("\n"),
+                Token::Whitespace("        "),
+                Token::Identifier("tiger"),
             ]
         );
     }
