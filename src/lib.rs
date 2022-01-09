@@ -7,7 +7,7 @@ use nom::{
     character::complete::{char, newline, satisfy},
     combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
     multi::{many0, many1},
-    sequence::{delimited, terminated},
+    sequence::{delimited, terminated, tuple},
 };
 
 /// Standard return type for [`nom`] string parsers.
@@ -34,6 +34,11 @@ impl Token {
     }
 }
 
+/// A single Unicode alphabetic character.
+fn unicode_alphabetic(input: &str) -> NResult<char> {
+    satisfy(char::is_alphabetic)(input)
+}
+
 /// A single alphanumeric (Unicode) character or underscore.
 fn word_character(input: &str) -> NResult<char> {
     alt((char('_'), satisfy(char::is_alphanumeric)))(input)
@@ -46,14 +51,14 @@ fn not_newline(input: &str) -> NResult<char> {
 
 fn token(input: &str) -> NResult<Token> {
     let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
-    let identifier = recognize(many1(word_character));
+    let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let slash = terminated(char('/'), peek(not(char('/'))));
     let indentation = alt((tag("\t"), tag("    ")));
 
     alt((
+        map(line_comment, Token::line_comment),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
-        map(line_comment, Token::line_comment),
         map(identifier, Token::ident),
         value(Token::Slash, slash),
         value(Token::Newline, newline),
@@ -129,6 +134,11 @@ mod tests {
             lexer("single_wꙮrd").unwrap().1,
             vec![Token::ident("single_wꙮrd")]
         );
+    }
+
+    #[test]
+    fn disallow_identifier_starting_with_digit() {
+        assert!(matches!(lexer("0word"), Err(_)));
     }
 
     #[test]
