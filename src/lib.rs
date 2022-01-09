@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
-    character::complete::{alphanumeric1, char, newline},
-    combinator::{all_consuming, eof, map, value},
+    character::complete::{char, newline, satisfy},
+    combinator::{all_consuming, eof, map, recognize, value},
     multi::many1,
     sequence::terminated,
 };
@@ -23,8 +23,13 @@ impl Token {
     }
 }
 
+/// A single alphanumeric (Unicode) character or underscore.
+fn word_character(input: &str) -> NResult<char> {
+    alt((char('_'), satisfy(char::is_alphanumeric)))(input)
+}
+
 fn token(input: &str) -> NResult<Token> {
-    let word = map(alphanumeric1, Token::word);
+    let word = map(recognize(many1(word_character)), Token::word);
     let slash = value(Token::Slash, char('/'));
     let newline = value(Token::Newline, newline);
     let tab = value(Token::Tab, char('\t'));
@@ -49,11 +54,27 @@ mod tests {
     }
 
     #[test]
+    fn single_word_with_underscore() {
+        assert_eq!(
+            lexer("single_word").unwrap().1,
+            vec![Token::word("single_word")]
+        );
+    }
+
+    #[test]
+    fn single_word_with_unicode() {
+        assert_eq!(
+            lexer("single_wꙮrd").unwrap().1,
+            vec![Token::word("single_wꙮrd")]
+        );
+    }
+
+    #[test]
     fn two_words_and_slash() {
         assert_eq!(
             lexer("two/words").unwrap().1,
             vec![Token::word("two"), Token::Slash, Token::word("words")]
-        )
+        );
     }
 
     #[test]
@@ -69,7 +90,7 @@ mod tests {
                 Token::Slash,
                 Token::word("newline")
             ]
-        )
+        );
     }
 
     #[test]
@@ -86,6 +107,6 @@ mod tests {
                 Token::Slash,
                 Token::word("tab")
             ]
-        )
+        );
     }
 }
