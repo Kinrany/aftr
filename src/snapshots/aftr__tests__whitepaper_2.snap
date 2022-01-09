@@ -1,0 +1,153 @@
+---
+source: src/lib.rs
+assertion_line: 306
+expression: lexer(text).unwrap().1
+
+---
+[
+    Identifier(
+        "animal",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "    ",
+    ),
+    Identifier(
+        "var",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    Identifier(
+        "legs",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "    ",
+    ),
+    Identifier(
+        "cat",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    LineComment(
+        " set the default value for all objects of type /animal/cat",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    Identifier(
+        "legs",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "=",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Number(
+        4.0,
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    LineComment(
+        " define a proc for all cats",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    Identifier(
+        "proc",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "            ",
+    ),
+    Identifier(
+        "meow",
+    ),
+    BracketRoundOpening,
+    BracketRoundClosing,
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "        ",
+    ),
+    Identifier(
+        "tiger",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "            ",
+    ),
+    LineComment(
+        " override the meow() proc",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "            ",
+    ),
+    Identifier(
+        "meow",
+    ),
+    BracketRoundOpening,
+    BracketRoundClosing,
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "                ",
+    ),
+    Identifier(
+        "world",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "<<",
+    ),
+    Whitespace(
+        " ",
+    ),
+    String(
+        "ROAR!",
+    ),
+]

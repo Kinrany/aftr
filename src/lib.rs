@@ -72,7 +72,7 @@ fn token(input: &str) -> NResult<Token> {
     );
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let string = delimited(char('"'), recognize(many0(not_char('"'))), char('"'));
-    let operator = recognize(many_m_n(1, 2, one_of("+<")));
+    let operator = recognize(many_m_n(1, 2, one_of("+<=")));
     let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
 
     alt((
@@ -285,7 +285,6 @@ animal
         );
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn whitepaper_2() {
         let text = "\
