@@ -15,6 +15,8 @@ type NResult<'a, T> = nom::IResult<&'a str, T>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
+    BracketRoundClosing,
+    BracketRoundOpening,
     Indentation,
     Identifier(String),
     LineComment(String),
@@ -49,6 +51,8 @@ fn token(input: &str) -> NResult<Token> {
     let indentation = alt((tag("\t"), tag("    ")));
 
     alt((
+        value(Token::BracketRoundClosing, char(')')),
+        value(Token::BracketRoundOpening, char('(')),
         map(line_comment, Token::line_comment),
         map(identifier, Token::ident),
         value(Token::Slash, slash),
@@ -65,6 +69,19 @@ pub fn lexer(input: &str) -> NResult<Vec<Token>> {
 mod tests {
     use super::*;
     use insta::assert_debug_snapshot;
+
+    #[test]
+    fn brackets() {
+        assert_eq!(
+            lexer("(()(").unwrap().1,
+            vec![
+                Token::BracketRoundOpening,
+                Token::BracketRoundOpening,
+                Token::BracketRoundClosing,
+                Token::BracketRoundOpening,
+            ]
+        );
+    }
 
     #[test]
     fn line_comment() {
