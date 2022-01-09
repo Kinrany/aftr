@@ -64,6 +64,7 @@ pub fn lexer(input: &str) -> NResult<Vec<Token>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_debug_snapshot;
 
     #[test]
     fn line_comment() {
@@ -190,5 +191,27 @@ animal
                 Token::ident("tiger"),
             ]
         );
+    }
+
+    #[ignore = "not implemented"]
+    #[test]
+    fn whitepaper_2() {
+        let text = "\
+animal
+    var
+        legs
+    cat
+        // set the default value for all objects of type /animal/cat
+        legs = 4
+
+        // define a proc for all cats
+        proc
+            meow()
+
+        tiger
+            // override the meow() proc
+            meow()
+                world << \"ROAR!\"";
+        assert_debug_snapshot!(lexer(text).unwrap().1);
     }
 }
