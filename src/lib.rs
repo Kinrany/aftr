@@ -4,7 +4,7 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, newline, one_of, satisfy},
+    character::complete::{char, multispace1, newline, one_of, satisfy},
     combinator::{all_consuming, eof, map, opt, peek, recognize, value},
     multi::{many0, many1, many_m_n},
     number::complete::double,
@@ -51,7 +51,6 @@ fn token(input: &str) -> NResult<Token> {
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let string = delimited(char('"'), recognize(many0(not_char('"'))), char('"'));
     let operator = recognize(many_m_n(1, 2, one_of("+<=.")));
-    let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
 
     alt((
         map(line_comment, Token::LineComment),
@@ -59,7 +58,7 @@ fn token(input: &str) -> NResult<Token> {
         map(double, Token::Number),
         map(string, Token::String),
         map(operator, Token::Operator),
-        map(whitespace, Token::Whitespace),
+        map(multispace1, Token::Whitespace),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
         value(Token::Slash, char('/')),
@@ -162,8 +161,7 @@ mod tests {
             lexer("two\n    identifiers").unwrap().1,
             vec![
                 Token::Identifier("two"),
-                Token::Whitespace("\n"),
-                Token::Whitespace("    "),
+                Token::Whitespace("\n    "),
                 Token::Identifier("identifiers")
             ]
         );
@@ -193,8 +191,7 @@ mod tests {
                 Token::Identifier("four"),
                 Token::Slash,
                 Token::Identifier("words"),
-                Token::Whitespace("\n"),
-                Token::Whitespace("\t"),
+                Token::Whitespace("\n\t"),
                 Token::Identifier("with"),
                 Token::Slash,
                 Token::Identifier("indentation"),
@@ -254,11 +251,9 @@ animal
             lexer(text).unwrap().1,
             vec![
                 Token::Identifier("animal"),
-                Token::Whitespace("\n"),
-                Token::Whitespace("    "),
+                Token::Whitespace("\n    "),
                 Token::Identifier("cat"),
-                Token::Whitespace("\n"),
-                Token::Whitespace("        "),
+                Token::Whitespace("\n        "),
                 Token::Identifier("tiger"),
             ]
         );

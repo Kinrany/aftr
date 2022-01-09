@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 306
+assertion_line: 283
 expression: lexer(text).unwrap().1
 
 ---
@@ -9,46 +9,31 @@ expression: lexer(text).unwrap().1
         "animal",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "    ",
+        "\n    ",
     ),
     Identifier(
         "var",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n        ",
     ),
     Identifier(
         "legs",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "    ",
+        "\n    ",
     ),
     Identifier(
         "cat",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n        ",
     ),
     LineComment(
         " set the default value for all objects of type /animal/cat",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n        ",
     ),
     Identifier(
         "legs",
@@ -66,31 +51,19 @@ expression: lexer(text).unwrap().1
         4.0,
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n\n        ",
     ),
     LineComment(
         " define a proc for all cats",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n        ",
     ),
     Identifier(
         "proc",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "            ",
+        "\n            ",
     ),
     Identifier(
         "meow",
@@ -98,31 +71,19 @@ expression: lexer(text).unwrap().1
     BracketRoundOpening,
     BracketRoundClosing,
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "        ",
+        "\n\n        ",
     ),
     Identifier(
         "tiger",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "            ",
+        "\n            ",
     ),
     LineComment(
         " override the meow() proc",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "            ",
+        "\n            ",
     ),
     Identifier(
         "meow",
@@ -130,10 +91,7 @@ expression: lexer(text).unwrap().1
     BracketRoundOpening,
     BracketRoundClosing,
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "                ",
+        "\n                ",
     ),
     Identifier(
         "world",

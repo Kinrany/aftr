@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 323
+assertion_line: 298
 expression: lexer(text).unwrap().1
 
 ---
@@ -82,10 +82,7 @@ expression: lexer(text).unwrap().1
         "usr",
     ),
     Whitespace(
-        "\n",
-    ),
-    Whitespace(
-        "\n",
+        "\n\n",
     ),
     LineComment(
         " output some stuff",
