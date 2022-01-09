@@ -6,7 +6,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::{char, newline, satisfy},
     combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
-    multi::{many0, many1},
+    multi::{many0, many1, many_m_n},
     sequence::{delimited, terminated, tuple},
 };
 
@@ -21,6 +21,7 @@ pub enum Token {
     Identifier(String),
     LineComment(String),
     Newline,
+    Operator(String),
     Slash,
 }
 
@@ -31,6 +32,10 @@ impl Token {
 
     fn line_comment(s: &str) -> Self {
         Self::LineComment(s.into())
+    }
+
+    fn operator(s: &str) -> Self {
+        Self::Operator(s.into())
     }
 }
 
@@ -52,14 +57,16 @@ fn not_newline(input: &str) -> NResult<char> {
 fn token(input: &str) -> NResult<Token> {
     let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
+    let operator = recognize(many_m_n(1, 2, alt((char('+'), char('<')))));
     let slash = terminated(char('/'), peek(not(char('/'))));
     let indentation = alt((tag("\t"), tag("    ")));
 
     alt((
         map(line_comment, Token::line_comment),
+        map(identifier, Token::ident),
+        map(operator, Token::operator),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
-        map(identifier, Token::ident),
         value(Token::Slash, slash),
         value(Token::Newline, newline),
         value(Token::Indentation, indentation),
@@ -195,6 +202,30 @@ mod tests {
                 Token::ident("with"),
                 Token::Slash,
                 Token::ident("indentation"),
+            ]
+        );
+    }
+
+    #[test]
+    fn operator_plus() {
+        assert_eq!(
+            lexer("one+two").unwrap().1,
+            vec![
+                Token::ident("one"),
+                Token::operator("+"),
+                Token::ident("two"),
+            ]
+        );
+    }
+
+    #[test]
+    fn operator_left_shift() {
+        assert_eq!(
+            lexer("one<<two").unwrap().1,
+            vec![
+                Token::ident("one"),
+                Token::operator("<<"),
+                Token::ident("two"),
             ]
         );
     }
