@@ -72,7 +72,7 @@ fn token(input: &str) -> NResult<Token> {
     );
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let string = delimited(char('"'), recognize(many0(not_char('"'))), char('"'));
-    let operator = recognize(many_m_n(1, 2, one_of("+<=")));
+    let operator = recognize(many_m_n(1, 2, one_of("+<=.")));
     let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
 
     alt((
@@ -271,6 +271,7 @@ mod tests {
 animal
     cat
         tiger";
+
         assert_eq!(
             lexer(text).unwrap().1,
             vec![
@@ -303,6 +304,22 @@ animal
             // override the meow() proc
             meow()
                 world << \"ROAR!\"";
+
+        assert_debug_snapshot!(lexer(text).unwrap().1);
+    }
+
+    #[test]
+    fn whitepaper_3() {
+        let text = r#"
+// define some stuff
+var/x = 3
+var/player = usr
+var/mob/m = usr
+
+// output some stuff
+world << player.x  // "player" has no type so we get a compile-time error
+world << m.x       // "m" is of type /mob, and mobs have an x variable""#;
+
         assert_debug_snapshot!(lexer(text).unwrap().1);
     }
 }

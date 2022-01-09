@@ -1,0 +1,153 @@
+---
+source: src/lib.rs
+assertion_line: 323
+expression: lexer(text).unwrap().1
+
+---
+[
+    Whitespace(
+        "\n",
+    ),
+    LineComment(
+        " define some stuff",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Identifier(
+        "var",
+    ),
+    Slash,
+    Identifier(
+        "x",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "=",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Number(
+        3.0,
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Identifier(
+        "var",
+    ),
+    Slash,
+    Identifier(
+        "player",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "=",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Identifier(
+        "usr",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Identifier(
+        "var",
+    ),
+    Slash,
+    Identifier(
+        "mob",
+    ),
+    Slash,
+    Identifier(
+        "m",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "=",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Identifier(
+        "usr",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    LineComment(
+        " output some stuff",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Identifier(
+        "world",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "<<",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Identifier(
+        "player",
+    ),
+    Operator(
+        ".",
+    ),
+    Identifier(
+        "x",
+    ),
+    Whitespace(
+        "  ",
+    ),
+    LineComment(
+        " \"player\" has no type so we get a compile-time error",
+    ),
+    Whitespace(
+        "\n",
+    ),
+    Identifier(
+        "world",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Operator(
+        "<<",
+    ),
+    Whitespace(
+        " ",
+    ),
+    Identifier(
+        "m",
+    ),
+    Operator(
+        ".",
+    ),
+    Identifier(
+        "x",
+    ),
+    Whitespace(
+        "       ",
+    ),
+    LineComment(
+        " \"m\" is of type /mob, and mobs have an x variable\"",
+    ),
+]
