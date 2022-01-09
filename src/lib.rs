@@ -50,7 +50,7 @@ fn token(input: &str) -> NResult<Token> {
     let word = map(recognize(many1(word_character)), Token::word);
     let slash = terminated(value(Token::Slash, char('/')), peek(not(char('/'))));
     let newline_token = value(Token::Newline, newline);
-    let tab = value(Token::Tab, char('\t'));
+    let tab = value(Token::Tab, alt((tag("\t"), tag("    "))));
 
     alt((line_comment, word, slash, newline_token, tab))(input)
 }
@@ -116,6 +116,19 @@ mod tests {
         assert_eq!(
             lexer("two/words").unwrap().1,
             vec![Token::word("two"), Token::Slash, Token::word("words")]
+        );
+    }
+
+    #[test]
+    fn two_words_and_four_spaces() {
+        assert_eq!(
+            lexer("two\n    words").unwrap().1,
+            vec![
+                Token::word("two"),
+                Token::Newline,
+                Token::Tab,
+                Token::word("words")
+            ]
         );
     }
 
