@@ -4,7 +4,7 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, newline, satisfy},
+    character::complete::{char, newline, satisfy, one_of},
     combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
     multi::{many0, many1, many_m_n},
     sequence::{delimited, terminated, tuple},
@@ -60,7 +60,7 @@ fn not_newline(input: &str) -> NResult<char> {
 fn token(input: &str) -> NResult<Token> {
     let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
-    let operator = recognize(many_m_n(1, 2, alt((char('+'), char('<')))));
+    let operator = recognize(many_m_n(1, 2, one_of("+<")));
     let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
     let slash = terminated(char('/'), peek(not(char('/'))));
 
