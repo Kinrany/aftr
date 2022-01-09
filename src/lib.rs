@@ -43,16 +43,18 @@ fn not_newline(input: &str) -> NResult<char> {
 }
 
 fn token(input: &str) -> NResult<Token> {
-    let line_comment = map(
-        delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline))),
-        Token::line_comment,
-    );
-    let identifier = map(recognize(many1(word_character)), Token::ident);
-    let slash = terminated(value(Token::Slash, char('/')), peek(not(char('/'))));
-    let newline_token = value(Token::Newline, newline);
-    let indentation = value(Token::Indentation, alt((tag("\t"), tag("    "))));
+    let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
+    let identifier = recognize(many1(word_character));
+    let slash = terminated(char('/'), peek(not(char('/'))));
+    let indentation = alt((tag("\t"), tag("    ")));
 
-    alt((line_comment, identifier, slash, newline_token, indentation))(input)
+    alt((
+        map(line_comment, Token::line_comment),
+        map(identifier, Token::ident),
+        value(Token::Slash, slash),
+        value(Token::Newline, newline),
+        value(Token::Indentation, indentation),
+    ))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
