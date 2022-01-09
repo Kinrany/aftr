@@ -5,7 +5,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::{char, newline, one_of, satisfy},
-    combinator::{all_consuming, eof, map, not, opt, peek, recognize, value},
+    combinator::{all_consuming, eof, map, opt, peek, recognize, value},
     multi::{many0, many1, many_m_n},
     number::complete::double,
     sequence::{delimited, terminated, tuple},
@@ -23,6 +23,7 @@ pub enum Token {
     Number(f64),
     Operator(String),
     Slash,
+    String(String),
     Whitespace(String),
 }
 
@@ -37,6 +38,10 @@ impl Token {
 
     fn operator(s: &str) -> Self {
         Self::Operator(s.into())
+    }
+
+    fn string(s: &str) -> Self {
+        Self::String(s.into())
     }
 
     fn whitespace(s: &str) -> Self {
@@ -54,27 +59,32 @@ fn word_character(input: &str) -> NResult<char> {
     alt((char('_'), satisfy(char::is_alphanumeric)))(input)
 }
 
-/// A single character that is not a newline.
-fn not_newline(input: &str) -> NResult<char> {
-    satisfy(|ch| ch != '\n')(input)
+/// Any single character but the specified one.
+fn not_char(banned_char: char) -> impl Fn(&str) -> NResult<char> {
+    move |input| satisfy(|ch| ch != banned_char)(input)
 }
 
 fn token(input: &str) -> NResult<Token> {
-    let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
+    let line_comment = delimited(
+        tag("//"),
+        recognize(many0(not_char('\n'))),
+        opt(peek(newline)),
+    );
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
+    let string = delimited(char('"'), recognize(many0(not_char('"'))), char('"'));
     let operator = recognize(many_m_n(1, 2, one_of("+<")));
     let whitespace = alt((recognize(many1(char(' '))), tag("\n"), tag("\t")));
-    let slash = terminated(char('/'), peek(not(char('/'))));
 
     alt((
         map(line_comment, Token::line_comment),
         map(identifier, Token::ident),
         map(double, Token::Number),
+        map(string, Token::string),
         map(operator, Token::operator),
         map(whitespace, Token::whitespace),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
-        value(Token::Slash, slash),
+        value(Token::Slash, char('/')),
     ))(input)
 }
 
@@ -236,6 +246,11 @@ mod tests {
                 Token::ident("two"),
             ]
         );
+    }
+
+    #[test]
+    fn string() {
+        assert_eq!(lexer("\"text\"").unwrap().1, vec![Token::string("text")]);
     }
 
     #[test]
