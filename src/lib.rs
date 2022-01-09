@@ -17,12 +17,12 @@ type NResult<'a, T> = nom::IResult<&'a str, T>;
 pub enum Token {
     BracketRoundClosing,
     BracketRoundOpening,
-    Indentation,
     Identifier(String),
     LineComment(String),
     Newline,
     Operator(String),
     Slash,
+    Whitespace(String),
 }
 
 impl Token {
@@ -36,6 +36,10 @@ impl Token {
 
     fn operator(s: &str) -> Self {
         Self::Operator(s.into())
+    }
+
+    fn whitespace(s: &str) -> Self {
+        Self::Whitespace(s.into())
     }
 }
 
@@ -58,18 +62,18 @@ fn token(input: &str) -> NResult<Token> {
     let line_comment = delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline)));
     let identifier = recognize(tuple((unicode_alphabetic, many0(word_character))));
     let operator = recognize(many_m_n(1, 2, alt((char('+'), char('<')))));
+    let whitespace = recognize(many1(alt((char(' '), char('\t')))));
     let slash = terminated(char('/'), peek(not(char('/'))));
-    let indentation = alt((tag("\t"), tag("    ")));
 
     alt((
         map(line_comment, Token::line_comment),
         map(identifier, Token::ident),
         map(operator, Token::operator),
+        map(whitespace, Token::whitespace),
         value(Token::BracketRoundClosing, char(')')),
         value(Token::BracketRoundOpening, char('(')),
         value(Token::Slash, slash),
         value(Token::Newline, newline),
-        value(Token::Indentation, indentation),
     ))(input)
 }
 
@@ -167,7 +171,7 @@ mod tests {
             vec![
                 Token::ident("two"),
                 Token::Newline,
-                Token::Indentation,
+                Token::whitespace("    "),
                 Token::ident("identifiers")
             ]
         );
@@ -198,7 +202,7 @@ mod tests {
                 Token::Slash,
                 Token::ident("words"),
                 Token::Newline,
-                Token::Indentation,
+                Token::whitespace("\t"),
                 Token::ident("with"),
                 Token::Slash,
                 Token::ident("indentation"),
@@ -231,6 +235,18 @@ mod tests {
     }
 
     #[test]
+    fn whitespace() {
+        assert_eq!(
+            lexer("one two").unwrap().1,
+            vec![
+                Token::ident("one"),
+                Token::whitespace(" "),
+                Token::ident("two"),
+            ]
+        );
+    }
+
+    #[test]
     fn whitepaper_1() {
         let text = "\
 animal
@@ -241,11 +257,10 @@ animal
             vec![
                 Token::ident("animal"),
                 Token::Newline,
-                Token::Indentation,
+                Token::whitespace("    "),
                 Token::ident("cat"),
                 Token::Newline,
-                Token::Indentation,
-                Token::Indentation,
+                Token::whitespace("        "),
                 Token::ident("tiger"),
             ]
         );
