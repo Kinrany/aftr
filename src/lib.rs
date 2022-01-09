@@ -15,10 +15,10 @@ type NResult<'a, T> = nom::IResult<&'a str, T>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
+    Indentation,
     LineComment(String),
     Newline,
     Slash,
-    Tab,
     Word(String),
 }
 
@@ -50,9 +50,9 @@ fn token(input: &str) -> NResult<Token> {
     let word = map(recognize(many1(word_character)), Token::word);
     let slash = terminated(value(Token::Slash, char('/')), peek(not(char('/'))));
     let newline_token = value(Token::Newline, newline);
-    let tab = value(Token::Tab, alt((tag("\t"), tag("    "))));
+    let indentation = value(Token::Indentation, alt((tag("\t"), tag("    "))));
 
-    alt((line_comment, word, slash, newline_token, tab))(input)
+    alt((line_comment, word, slash, newline_token, indentation))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
@@ -126,7 +126,7 @@ mod tests {
             vec![
                 Token::word("two"),
                 Token::Newline,
-                Token::Tab,
+                Token::Indentation,
                 Token::word("words")
             ]
         );
@@ -149,18 +149,18 @@ mod tests {
     }
 
     #[test]
-    fn four_words_with_tab() {
+    fn four_words_with_indentation() {
         assert_eq!(
-            lexer("four/words\n\twith/tab").unwrap().1,
+            lexer("four/words\n\twith/indentation").unwrap().1,
             vec![
                 Token::word("four"),
                 Token::Slash,
                 Token::word("words"),
                 Token::Newline,
-                Token::Tab,
+                Token::Indentation,
                 Token::word("with"),
                 Token::Slash,
-                Token::word("tab"),
+                Token::word("indentation"),
             ]
         );
     }
