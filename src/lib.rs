@@ -16,19 +16,19 @@ type NResult<'a, T> = nom::IResult<&'a str, T>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
     Indentation,
+    Identifier(String),
     LineComment(String),
     Newline,
     Slash,
-    Word(String),
 }
 
 impl Token {
-    fn line_comment(s: &str) -> Self {
-        Self::LineComment(s.into())
+    fn ident(s: &str) -> Self {
+        Self::Identifier(s.into())
     }
 
-    fn word(s: &str) -> Self {
-        Self::Word(s.into())
+    fn line_comment(s: &str) -> Self {
+        Self::LineComment(s.into())
     }
 }
 
@@ -47,12 +47,12 @@ fn token(input: &str) -> NResult<Token> {
         delimited(tag("//"), recognize(many0(not_newline)), opt(peek(newline))),
         Token::line_comment,
     );
-    let word = map(recognize(many1(word_character)), Token::word);
+    let identifier = map(recognize(many1(word_character)), Token::ident);
     let slash = terminated(value(Token::Slash, char('/')), peek(not(char('/'))));
     let newline_token = value(Token::Newline, newline);
     let indentation = value(Token::Indentation, alt((tag("\t"), tag("    "))));
 
-    alt((line_comment, word, slash, newline_token, indentation))(input)
+    alt((line_comment, identifier, slash, newline_token, indentation))(input)
 }
 
 pub fn lexer(input: &str) -> NResult<Vec<Token>> {
@@ -70,7 +70,7 @@ mod tests {
             vec![
                 Token::line_comment("hello"),
                 Token::Newline,
-                Token::word("word"),
+                Token::ident("word"),
             ]
         );
     }
@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(
             lexer("hello\n//world").unwrap().1,
             vec![
-                Token::word("hello"),
+                Token::ident("hello"),
                 Token::Newline,
                 Token::line_comment("world"),
             ]
@@ -88,79 +88,83 @@ mod tests {
     }
 
     #[test]
-    fn single_word() {
+    fn single_identifier() {
         assert_eq!(
-            lexer("singleword").unwrap().1,
-            vec![Token::word("singleword")]
+            lexer("identifier").unwrap().1,
+            vec![Token::ident("identifier")]
         );
     }
 
     #[test]
-    fn single_word_with_underscore() {
+    fn single_identifier_with_underscore() {
         assert_eq!(
-            lexer("single_word").unwrap().1,
-            vec![Token::word("single_word")]
+            lexer("single_identifier").unwrap().1,
+            vec![Token::ident("single_identifier")]
         );
     }
 
     #[test]
-    fn single_word_with_unicode() {
+    fn single_identifier_with_unicode() {
         assert_eq!(
             lexer("single_wꙮrd").unwrap().1,
-            vec![Token::word("single_wꙮrd")]
+            vec![Token::ident("single_wꙮrd")]
         );
     }
 
     #[test]
-    fn two_words_and_slash() {
+    fn two_identifiers_and_slash() {
         assert_eq!(
-            lexer("two/words").unwrap().1,
-            vec![Token::word("two"), Token::Slash, Token::word("words")]
-        );
-    }
-
-    #[test]
-    fn two_words_and_four_spaces() {
-        assert_eq!(
-            lexer("two\n    words").unwrap().1,
+            lexer("two/identifiers").unwrap().1,
             vec![
-                Token::word("two"),
+                Token::ident("two"),
+                Token::Slash,
+                Token::ident("identifiers")
+            ]
+        );
+    }
+
+    #[test]
+    fn two_identifiers_and_four_spaces() {
+        assert_eq!(
+            lexer("two\n    identifiers").unwrap().1,
+            vec![
+                Token::ident("two"),
                 Token::Newline,
                 Token::Indentation,
-                Token::word("words")
+                Token::ident("identifiers")
             ]
         );
     }
 
     #[test]
-    fn three_words_and_newline() {
+    fn three_identifiers_and_newline() {
         assert_eq!(
-            lexer("three/words\nw/newline").unwrap().1,
+            lexer("three/identifiers\nw/newline").unwrap().1,
             vec![
-                Token::word("three"),
+                Token::ident("three"),
                 Token::Slash,
-                Token::word("words"),
+                Token::ident("identifiers"),
                 Token::Newline,
-                Token::word("w"),
+                Token::ident("w"),
                 Token::Slash,
-                Token::word("newline"),
+                Token::ident("newline"),
             ]
         );
     }
 
     #[test]
-    fn four_words_with_indentation() {
+    fn four_identifiers_with_indentation() {
         assert_eq!(
             lexer("four/words\n\twith/indentation").unwrap().1,
             vec![
-                Token::word("four"),
+                Token::ident("four"),
                 Token::Slash,
-                Token::word("words"),
+                Token::ident("words"),
                 Token::Newline,
                 Token::Indentation,
-                Token::word("with"),
+                Token::ident("with"),
                 Token::Slash,
-                Token::word("indentation"),
+                Token::ident("indentation"),
             ]
         );
     }
